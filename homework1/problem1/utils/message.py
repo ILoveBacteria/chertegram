@@ -5,8 +5,12 @@ class Message:
         self.content = content
 
     def marshal(self) -> bytes:
+        """Marshal message into bytes
+        Format: sender;receiver;content
+        """
         return f'{self.sender};{self.receiver};{self.content}'.encode()
 
     @classmethod
     def unmarshal(cls, data: bytes) -> Message:
+        """Unmarshal bytes into message"""
         return Message(*data.decode().split(';'))
