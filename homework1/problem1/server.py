@@ -47,7 +47,7 @@ class Server:
         user = User(username, s)
         self.users.append(user)
         self.send_to_all(
-            Message(f'{username} joined the chat. Say hello to {username}!'))
+            Message(username, '', f'{username} joined the chat. Say hello to {username}!'))
         while True:
             try:
                 data = s.recv(255)
@@ -59,3 +59,8 @@ class Server:
                     self.send_to_all(message)
             except ConnectionResetError:
                 break
+
+
+if __name__ == '__main__':
+    server = Server(5000)
+    server.start()

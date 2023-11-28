@@ -11,6 +11,6 @@ class Message:
         return f'{self.sender};{self.receiver};{self.content}'.encode()
 
     @classmethod
-    def unmarshal(cls, data: bytes) -> Message:
+    def unmarshal(cls, data: bytes):
         """Unmarshal bytes into message"""
         return Message(*data.decode().split(';'))
