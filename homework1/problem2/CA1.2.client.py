@@ -20,6 +20,8 @@ class UDPClient(Client):
         """Starts the UDP client"""
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.bind((self.host, self.port))
+        self.host = s.getsockname()[0]
+        self.port = s.getsockname()[1]
         print(f'Client is running at {s.getsockname()[0]}:{s.getsockname()[1]}')
 
         while True:
@@ -28,7 +30,7 @@ class UDPClient(Client):
 
             if message != "end server":
                 response, server_address = s.recvfrom(4096)
-                print(response.decode(), "\n")
+                print(response.decode())
             else:
                 s.close()
                 break
@@ -41,6 +43,8 @@ class TCPClient(Client):
         """Starts the TCP client"""
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.host, self.port))
+        self.host = s.getsockname()[0]
+        self.port = s.getsockname()[1]
         print(f'Client is running at {s.getsockname()[0]}:{s.getsockname()[1]}')
 
         s.connect(server_address)
@@ -51,7 +55,7 @@ class TCPClient(Client):
 
             if message != "end server":
                 response, connection_address = s.recvfrom(4096)
-                print(response.decode(), "\n")
+                print(response.decode())
             else:
                 s.close()
                 break
@@ -59,6 +63,7 @@ class TCPClient(Client):
 
 def main():
     while True:
+        print()
         print("1. UDP")
         print("2. TCP")
         print("3. Quit")

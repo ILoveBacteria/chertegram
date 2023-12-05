@@ -11,25 +11,6 @@ class Server:
         self.host = host
         self.port = port
 
-    def start(self):
-        """Starts the appropriate server"""
-        print(f'{self.protocol} server is running at {self.host}:{self.port}')
-
-        if self.protocol == "UDP":
-            server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            server_socket.bind((self.host, self.port))
-            threading.Thread(target=self.udp_handler,
-                             args=(server_socket,)).start()
-
-        if self.protocol == "TCP":
-            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            server_socket.bind((self.host, self.port))
-            server_socket.listen(1)
-            while (True):
-                connection_socket, client_address = server_socket.accept()
-                threading.Thread(target=self.tcp_handler,
-                                 args=(connection_socket,)).start()
-
     def udp_response(self, message: str) -> str:
         """Generates requested response for UDP clients"""
         result = message[::-1].upper()
@@ -95,6 +76,29 @@ class Server:
                 print(f'{s.getpeername()[0]}:{s.getpeername()[1]} ended transmitting.')
                 s.close()
                 break
+
+    def start(self):
+        """Starts the appropriate server"""
+        if self.protocol == "UDP":
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            server_socket.bind((self.host, self.port))
+            self.host = server_socket.getsockname()[0]
+            self.port = server_socket.getsockname()[1]
+            print(f'{self.protocol} server is running at {self.host}:{self.port}')
+            threading.Thread(target=self.udp_handler,
+                             args=(server_socket,)).start()
+
+        if self.protocol == "TCP":
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_socket.bind((self.host, self.port))
+            self.host = server_socket.getsockname()[0]
+            self.port = server_socket.getsockname()[1]
+            print(f'{self.protocol} server is running at {self.host}:{self.port}')
+            server_socket.listen(1)
+            while (True):
+                connection_socket, client_address = server_socket.accept()
+                threading.Thread(target=self.tcp_handler,
+                                 args=(connection_socket,)).start()
 
 
 if __name__ == "__main__":
