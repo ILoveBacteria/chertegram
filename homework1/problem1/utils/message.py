@@ -1,5 +1,6 @@
 class Message:
-    def __init__(self, sender: str, receiver: str, content: str) -> None:
+    def __init__(self, type: str, sender: str, receiver: str, content: str) -> None:
+        self.type = type
         self.sender = sender
         self.receiver = receiver
         self.content = content
@@ -8,7 +9,7 @@ class Message:
         """Marshal message into bytes
         Format: sender;receiver;content
         """
-        return f'{self.sender};{self.receiver};{self.content}'.encode()
+        return f'{self.type};{self.sender};{self.receiver};{self.content}'.encode()
 
     @classmethod
     def unmarshal(cls, data: bytes):
