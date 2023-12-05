@@ -97,6 +97,7 @@ class Server:
             server_socket.listen(1)
             while (True):
                 connection_socket, client_address = server_socket.accept()
+                print(f'Client {client_address} Connected')
                 threading.Thread(target=self.tcp_handler,
                                  args=(connection_socket,)).start()
 
