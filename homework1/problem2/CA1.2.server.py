@@ -6,24 +6,24 @@ from collections import Counter
 class Server:
     """Server class for handling UDP & TCP clients"""
 
-    def __init__(self, protocol: str, address: str = "", port: int = 0) -> None:
+    def __init__(self, protocol: str, host: str = "", port: int = 0) -> None:
         self.protocol = protocol
-        self.address = address
+        self.host = host
         self.port = port
 
     def start(self):
         """Starts the appropriate server"""
-        print(f'{self.protocol} server is running at port {self.port}')
+        print(f'{self.protocol} server is running at {self.host}:{self.port}')
 
         if self.protocol == "UDP":
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            server_socket.bind((self.address, self.port))
+            server_socket.bind((self.host, self.port))
             threading.Thread(target=self.udp_handler,
                              args=(server_socket,)).start()
 
         if self.protocol == "TCP":
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            server_socket.bind((self.address, self.port))
+            server_socket.bind((self.host, self.port))
             server_socket.listen(1)
             while (True):
                 connection_socket, client_address = server_socket.accept()
@@ -66,32 +66,33 @@ class Server:
         """Handles all UDP clients"""
         while True:
             message, client_address = s.recvfrom(4096)
-
-            print(f'UDP message from {client_address} :')
+            print()
+            print(f'UDP message from {client_address[0]}:{client_address[1]}')
             message = message.decode()
             print(message)
 
             if message != "end server":
                 message = self.udp_response(message)
                 s.sendto(message.encode(), client_address)
-                print(message, "\n")
+                print(message)
             else:
-                print(f'{client_address} ended transmitting.')
+                print(f'{client_address[0]}:{client_address[1]} ended transmitting.')
 
     def tcp_handler(self, s: socket.socket):
         """Handles a TCP client in a separate thread"""
         while True:
             message, client_address = s.recvfrom(4096)
-            print(f'TCP message from {s.getpeername()} :')
+            print()
+            print(f'TCP message from {s.getpeername()[0]}:{s.getpeername()[1]}')
             message = message.decode()
             print(message)
 
             if message != "end server":
                 message = self.tcp_response(message)
-                s.send(message.encode())
-                print(message, "\n")
+                s.sendall(message.encode())
+                print(message)
             else:
-                print(f'{s.getpeername()} ended transmitting.')
+                print(f'{s.getpeername()[0]}:{s.getpeername()[1]} ended transmitting.')
                 s.close()
                 break
 

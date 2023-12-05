@@ -1,52 +1,56 @@
 import socket
 
 
-class UDPClient:
-    """Client class for sending data to UDP servers"""
+class Client:
+    """Client class for sending data to servers"""
 
-    def __init__(self, address: str = "", port: int = 0) -> None:
-        self.address = address
+    def __init__(self, host: str = "", port: int = 0) -> None:
+        self.host = host
         self.port = port
 
     def start(self, server_address):
+        """Starts the client"""
+        pass
+
+
+class UDPClient(Client):
+    """Client class for sending data to UDP servers"""
+
+    def start(self, server_address: tuple[str, int]):
         """Starts the UDP client"""
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.bind((self.address, self.port))
-        print(f'Client is running at {s.getsockname()}')
+        s.bind((self.host, self.port))
+        print(f'Client is running at {s.getsockname()[0]}:{s.getsockname()[1]}')
 
         while True:
-            message = input("Enter your string:\n")
+            message = input("\nEnter your string:\n")
             s.sendto(message.encode(), server_address)
 
             if message != "end server":
-                response, server_address = s.recvfrom(1000)
+                response, server_address = s.recvfrom(4096)
                 print(response.decode(), "\n")
             else:
                 s.close()
                 break
 
 
-class TCPClient:
+class TCPClient(Client):
     """Client class for sending data to TCP servers"""
 
-    def __init__(self, address: str = "", port: int = 0) -> None:
-        self.address = address
-        self.port = port
-
-    def start(self, server_address):
+    def start(self, server_address: tuple[str, int]):
         """Starts the TCP client"""
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((self.address, self.port))
-        print(f'Client is running at {s.getsockname()}')
+        s.bind((self.host, self.port))
+        print(f'Client is running at {s.getsockname()[0]}:{s.getsockname()[1]}')
 
         s.connect(server_address)
 
         while True:
-            message = input("Enter your string:\n")
-            s.send(message.encode())
+            message = input("\nEnter your string:\n")
+            s.sendall(message.encode())
 
             if message != "end server":
-                response, connection_address = s.recvfrom(1000)
+                response, connection_address = s.recvfrom(4096)
                 print(response.decode(), "\n")
             else:
                 s.close()
