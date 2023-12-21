@@ -34,7 +34,7 @@ class Server:
         for user in self.users:
             if user.username == username:
                 return user
-        raise ValueError(f'User {username} not found')
+        return None
 
     def remove_user_by_username(self, username: str):
         """Remove user object from list by username"""
@@ -56,6 +56,9 @@ class Server:
                         self.send(Message("Server", "", "", self.get_users_list_str()), s)
                     
                     elif message.content == "SetUsername":
+                        if self.get_user_by_username(message.sender):
+                            self.send(Message('Server', '', '', f'This username has already taken!'), s)
+                            continue
                         user = User(message.sender, s)
                         self.users.append(user)
                         self.send_to_all(Message("Server", "", "", f'{message.sender} joined the chat. Say hello to {message.sender}!'))
