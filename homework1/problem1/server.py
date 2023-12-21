@@ -55,23 +55,23 @@ class Server:
                     if message.content == "list":
                         self.send(Message("Server", "", "", self.get_users_list_str()), s)
                     
-                    if message.content == "SetUsername":
+                    elif message.content == "SetUsername":
                         user = User(message.sender, s)
                         self.users.append(user)
                         self.send_to_all(Message("Server", "", "", f'{message.sender} joined the chat. Say hello to {message.sender}!'))
                         print(f'{message.sender} joined the chat.')
                     
-                    if message.content == "quit":
+                    elif message.content == "quit":
                         self.get_user_by_username(message.sender).socket.close()
                         self.remove_user_by_username(message.sender)
                         self.send_to_all(Message("Server", "", "", f'{message.sender} left the chat.'))
                         print(f'{message.sender} left the chat.')
                         return
                 
-                if message.type == "Private":
+                elif message.type == "Private":
                     self.send(message, self.get_user_by_username(message.receiver).socket)
                 
-                if message.type == "Public":
+                elif message.type == "Public":
                     self.send_to_all(message)
 
             except ConnectionResetError:
