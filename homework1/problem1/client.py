@@ -2,8 +2,7 @@ import socket
 import threading
 import datetime
 
-from utils import Message
-from utils import User
+from utils import Message, User, UserStatus
 
 
 class Client:
@@ -16,7 +15,10 @@ class Client:
 
     def send(self, message: Message):
         """Send message to a specific user"""
-        self.user.socket.sendall(message.marshal())
+        if self.status == UserStatus.AVAILABLE:
+            self.user.socket.sendall(message.marshal())
+        else:
+            print("You are at busy status. You cannot send messages")
 
     def start(self, server_address: tuple[str, int]):
         """Starts the client"""
@@ -78,7 +80,7 @@ class Client:
 
 
     def message_receiver(self, s: socket.socket):
-        """Reveive messages from server in a separate thread"""
+        """Receive messages from server in a separate thread"""
         while True:
             try:
                 data = s.recv(4096)

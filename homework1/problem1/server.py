@@ -2,8 +2,7 @@ import socket
 import threading
 import datetime
 
-from utils import Message
-from utils import User
+from utils import Message, User, UserStatus
 
 
 class Server:
@@ -21,7 +20,8 @@ class Server:
     def send_to_all(self, message: Message):
         """Send message to all users"""
         for user in self.users:
-            self.send(message, user.socket)
+            if user.status == UserStatus.AVAILABLE:
+                self.send(message, user.socket)
 
     def get_users_list_str(self) -> str:
         """Get string list of users"""
@@ -73,7 +73,11 @@ class Server:
                         return
                 
                 elif message.type == "Private":
-                    self.send(message, self.get_user_by_username(message.receiver).socket)
+                    receiver = self.get_user_by_username(message.receiver)
+                    if receiver.status == UserStatus.AVAILABLE:
+                        self.send(message, receiver.socket)
+                    else:
+                        self.send(Message('Server', '', '', f'{message.receiver} is not available at the moment.', datetime.datetime.now().strftime('%H:%M')), s)
                 
                 elif message.type == "Public":
                     self.send_to_all(message)
