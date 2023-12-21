@@ -1,5 +1,6 @@
 import socket
 import threading
+import datetime
 
 from utils import Message
 from utils import User
@@ -53,21 +54,21 @@ class Server:
                 
                 if message.type == "Server":
                     if message.content == "list":
-                        self.send(Message("Server", "", "", self.get_users_list_str()), s)
+                        self.send(Message("Server", "", "", self.get_users_list_str(), datetime.datetime.now().strftime('%H:%M')), s)
                     
                     elif message.content == "SetUsername":
                         if self.get_user_by_username(message.sender):
-                            self.send(Message('Server', '', '', f'This username has already taken!'), s)
+                            self.send(Message('Server', '', '', f'This username has already taken!', datetime.datetime.now().strftime('%H:%M')), s)
                             continue
                         user = User(message.sender, s)
                         self.users.append(user)
-                        self.send_to_all(Message("Server", "", "", f'{message.sender} joined the chat. Say hello to {message.sender}!'))
+                        self.send_to_all(Message("Server", "", "", f'{message.sender} joined the chat. Say hello to {message.sender}!', datetime.datetime.now().strftime('%H:%M')))
                         print(f'{message.sender} joined the chat.')
                     
                     elif message.content == "quit":
                         self.get_user_by_username(message.sender).socket.close()
                         self.remove_user_by_username(message.sender)
-                        self.send_to_all(Message("Server", "", "", f'{message.sender} left the chat.'))
+                        self.send_to_all(Message("Server", "", "", f'{message.sender} left the chat.', datetime.datetime.now().strftime('%H:%M')))
                         print(f'{message.sender} left the chat.')
                         return
                 
