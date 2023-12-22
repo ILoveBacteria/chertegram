@@ -45,7 +45,10 @@ class Client:
                 break
             
             elif option == 2:
-                s.sendall(Message('list', '', 'Server', '').marshal())
+                UDP_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                UDP_socket.sendto(b'list', ('127.0.0.1', 5001))
+                message, _ = UDP_socket.recvfrom(255)
+                print(message.decode())
 
             elif option == 3:
                 s.close()
@@ -71,7 +74,10 @@ class Client:
                 self.send(Message('Public', self.user.username, '', message))
 
             elif option == 3:
-                self.send(Message('list', '', 'Server', ''))
+                UDP_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                UDP_socket.sendto(b'list', ('127.0.0.1', 5001))
+                message, _ = UDP_socket.recvfrom(255)
+                print(message.decode())
 
             elif option == 4:
                 self.send(Message('quit', self.user.username, 'Server', ''))
