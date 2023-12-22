@@ -27,10 +27,13 @@ class Server:
 
     def get_users_list_str(self) -> str:
         """Get string list of users"""
-        m = "\n"
-        for user in self.users:
-            m += user.username + "\n"
-        return m
+        if len(self.users) == 0:
+            return "\nThere are no users.\n"
+        else:
+            m = "\n"
+            for user in self.users:
+                m += user.username + " : " + user.status.value + "\n"
+            return m
 
     def get_user_by_username(self, username: str) -> User:
         """Get user object by username"""
@@ -47,6 +50,16 @@ class Server:
                 return
         raise ValueError(f'User {username} not found')
 
+    def set_user_status(self, username: str, userstatus: str) -> str:
+        """Update status of user"""
+        user = self.get_user_by_username(username)
+        for status in UserStatus:
+            if status == userstatus:
+                user.status = status
+                return
+        raise ValueError(f'Status {userstatus} not found')
+        
+
     def client_handler(self, s: socket.socket):
         """Handle a client in a separate thread"""
         while True:
@@ -62,21 +75,27 @@ class Server:
                     if user:
                         if user.check_password(message.content, Server.PASSWORD_SALT):
                             user.socket = s
-                            self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
+                            self.send(Message('Private', 'Server', message.sender, 'Logged in successfully!'), s)
                             print(f'{message.sender} joined the chat.')
                             message_history = [m.content for m in self.messages if m.sender == message.sender]
                             message_history.insert(0, f'This is your message history:')
                             if message_history:
                                 self.send(Message('Private', 'Server', message.sender, '\n'.join(message_history)), s)
+                            self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
                         else:
                             self.send(Message('Private', 'Server', message.sender, 'Wrong password!'), s)
                     else:
                         user = User(message.sender, s)
+                        self.send(Message('Private', 'Server', message.sender, 'Signed up successfully!'), s)
                         user.set_password(message.content, Server.PASSWORD_SALT)
                         self.users.append(user)
-                        self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
                         print(f'{message.sender} joined the chat.')
+                        self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
                 
+                elif message.type == "SetStatus":
+                    self.set_user_status(message.sender, message.content)
+                    self.send_to_all(Message('Public', 'Server', '', f'{message.sender} is {message.content} now.'))
+
                 elif message.type == "quit":
                     user = self.get_user_by_username(message.sender)
                     user.socket.close()
