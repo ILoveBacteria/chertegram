@@ -12,10 +12,12 @@ class Server:
         self.host = host
         self.port = port
         self.users = []
+        self.messages = []
 
-    def send(self, message: Message, s: socket.socket):
+    def send(self, message: Message, s: socket.socket) -> bool:
         """Send message to a specific user"""
         s.sendall(message.marshal())
+        return True
 
     def send_to_all(self, message: Message):
         """Send message to all users"""
@@ -62,6 +64,10 @@ class Server:
                             user.socket = s
                             self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
                             print(f'{message.sender} joined the chat.')
+                            message_history = [m.content for m in self.messages if m.sender == message.sender]
+                            message_history.insert(0, f'This is your message history:')
+                            if message_history:
+                                self.send(Message('Private', 'Server', message.sender, '\n'.join(message_history)), s)
                         else:
                             self.send(Message('Private', 'Server', message.sender, 'Wrong password!'), s)
                     else:
@@ -82,12 +88,14 @@ class Server:
                 elif message.type == "Private":
                     receiver = self.get_user_by_username(message.receiver)
                     if receiver.status == UserStatus.AVAILABLE:
-                        self.send(message, receiver.socket)
+                        if self.send(message, receiver.socket):
+                            self.messages.append(message)
                     else:
                         self.send(Message('Private', 'Server', message.sender, f'{message.receiver} is not available at the moment.'), s)
                 
                 elif message.type == "Public":
                     self.send_to_all(message)
+                    self.messages.append(message)
 
             except ConnectionResetError:
                 break
