@@ -3,8 +3,8 @@ import socket
 
 
 class UserStatus(IntEnum):
-    AVAILABLE: int
-    BUSY: int
+    AVAILABLE = 1
+    BUSY = 2
 
 
 class User:

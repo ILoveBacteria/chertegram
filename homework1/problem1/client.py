@@ -15,7 +15,7 @@ class Client:
 
     def send(self, message: Message):
         """Send message to a specific user"""
-        if self.status == UserStatus.AVAILABLE:
+        if self.user.status == UserStatus.AVAILABLE:
             self.user.socket.sendall(message.marshal())
         else:
             print("You are at busy status. You cannot send messages")
@@ -44,10 +44,10 @@ class Client:
                 self.send(Message("Server", username, "", "SetUsername", datetime.datetime.now().strftime('%H:%M')))
                 break
             
-            if option == 2:
+            elif option == 2:
                 s.sendall(Message("Server", "", "", "list", datetime.datetime.now().strftime('%H:%M')).marshal())
 
-            if option == 3:
+            elif option == 3:
                 s.close()
                 print("Quit")
                 return
@@ -65,14 +65,14 @@ class Client:
                 message = input("Enter your message:\n")
                 self.send(Message("Private", self.user.username, receiver, message, datetime.datetime.now().strftime('%H:%M')))
 
-            if option == 2:
+            elif option == 2:
                 message = input("Enter your message:\n")
                 self.send(Message("Public", self.user.username, "", message, datetime.datetime.now().strftime('%H:%M')))
 
-            if option == 3:
+            elif option == 3:
                 self.send(Message("Server", "", "", "list", datetime.datetime.now().strftime('%H:%M')))
 
-            if option == 4:
+            elif option == 4:
                 self.send(Message("Server", self.user.username, "", "quit", datetime.datetime.now().strftime('%H:%M')))
                 self.user.socket.close()
                 print("Quit")
