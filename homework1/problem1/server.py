@@ -20,7 +20,7 @@ class Server:
     def send_to_all(self, message: Message):
         """Send message to all users"""
         for user in self.users:
-            if user.status == UserStatus.AVAILABLE:
+            if user.status == UserStatus.AVAILABLE and user.socket is not None:
                 self.send(message, user.socket)
 
     def get_users_list_str(self) -> str:
@@ -56,17 +56,25 @@ class Server:
                     self.send(Message('Private', 'Server', '', self.get_users_list_str()), s)
                 
                 elif message.type == "Login":
-                    if self.get_user_by_username(message.sender):
-                        self.send(Message('Private', 'Server', '', f'This username has already taken!'), s)
-                        continue
-                    user = User(message.sender, s)
-                    self.users.append(user)
-                    self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
-                    print(f'{message.sender} joined the chat.')
+                    user = self.get_user_by_username(message.sender)
+                    if user:
+                        if user.check_password(message.content, Server.PASSWORD_SALT):
+                            user.socket = s
+                            self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
+                            print(f'{message.sender} joined the chat.')
+                        else:
+                            self.send(Message('Private', 'Server', message.sender, 'Wrong password!'), s)
+                    else:
+                        user = User(message.sender, s)
+                        user.set_password(message.content, Server.PASSWORD_SALT)
+                        self.users.append(user)
+                        self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
+                        print(f'{message.sender} joined the chat.')
                 
                 elif message.type == "quit":
-                    self.get_user_by_username(message.sender).socket.close()
-                    self.remove_user_by_username(message.sender)
+                    user = self.get_user_by_username(message.sender)
+                    user.socket.close()
+                    user.socket = None
                     self.send_to_all(Message('Public', 'Server', '', f'{message.sender} left the chat.'))
                     print(f'{message.sender} left the chat.')
                     return

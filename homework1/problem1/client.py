@@ -30,16 +30,17 @@ class Client:
 
         while True:
             print()
-            print("1. Set username\n"
+            print("1. Login\n"
                   "2. Get list of users\n"
                   "3. Quit\n")
             option = int(input("Choose option: ").strip())
 
             if option == 1:
                 username = input("Enter your username: ").strip()
+                password = input("Enter your password: ").strip()
                 self.user = User(username, s)
-                self.send(Message('Login', username, 'Server', ''))
-                if self.receive(s) == 'This username has already taken!':
+                self.send(Message('Login', username, 'Server', password))
+                if self.receive(s) == 'Wrong password!':
                     continue
                 break
             
