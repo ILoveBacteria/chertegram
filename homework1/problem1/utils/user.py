@@ -1,19 +1,19 @@
-from enum import IntEnum
+from enum import StrEnum
 import socket
 import hashlib
 
 
-class UserStatus(IntEnum):
-    AVAILABLE = 1
-    BUSY = 2
+class UserStatus(StrEnum):
+    AVAILABLE = 'available'
+    BUSY = 'busy'
 
 
 class User:
-    def __init__(self, username: str, socket: socket.socket) -> None:
+    def __init__(self, username: str, socket: socket.socket, status: UserStatus = UserStatus.AVAILABLE) -> None:
         self.username = username
         self.password = None
         self.socket = socket
-        self.status = UserStatus.AVAILABLE
+        self.status = status
 
     def set_password(self, password: str, salt: str):
         self.password = hashlib.sha256((password + salt).encode()).hexdigest()
