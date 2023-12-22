@@ -6,6 +6,7 @@ from utils import Message, User, UserStatus
 
 class Server:
     """Server class for handling multiple clients"""
+    PASSWORD_SALT = 'rAND0mS4lT'
 
     def __init__(self, host: str = "", port: int = 0) -> None:
         self.host = host
@@ -45,38 +46,37 @@ class Server:
         raise ValueError(f'User {username} not found')
 
     def client_handler(self, s: socket.socket):
-        """Handle a client in a separate thread"""        
+        """Handle a client in a separate thread"""
         while True:
             try:
                 data = s.recv(255)
                 message = Message.unmarshal(data)
                 
-                if message.type == "Server":
-                    if message.content == "list":
-                        self.send(Message("Server", "", "", self.get_users_list_str()), s)
-                    
-                    elif message.content == "SetUsername":
-                        if self.get_user_by_username(message.sender):
-                            self.send(Message('Server', '', '', f'This username has already taken!'), s)
-                            continue
-                        user = User(message.sender, s)
-                        self.users.append(user)
-                        self.send_to_all(Message("Server", "", "", f'{message.sender} joined the chat. Say hello to {message.sender}!'))
-                        print(f'{message.sender} joined the chat.')
-                    
-                    elif message.content == "quit":
-                        self.get_user_by_username(message.sender).socket.close()
-                        self.remove_user_by_username(message.sender)
-                        self.send_to_all(Message("Server", "", "", f'{message.sender} left the chat.'))
-                        print(f'{message.sender} left the chat.')
-                        return
+                if message.type == "list":
+                    self.send(Message('Private', 'Server', '', self.get_users_list_str()), s)
+                
+                elif message.type == "Login":
+                    if self.get_user_by_username(message.sender):
+                        self.send(Message('Private', 'Server', '', f'This username has already taken!'), s)
+                        continue
+                    user = User(message.sender, s)
+                    self.users.append(user)
+                    self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
+                    print(f'{message.sender} joined the chat.')
+                
+                elif message.type == "quit":
+                    self.get_user_by_username(message.sender).socket.close()
+                    self.remove_user_by_username(message.sender)
+                    self.send_to_all(Message('Public', 'Server', '', f'{message.sender} left the chat.'))
+                    print(f'{message.sender} left the chat.')
+                    return
                 
                 elif message.type == "Private":
                     receiver = self.get_user_by_username(message.receiver)
                     if receiver.status == UserStatus.AVAILABLE:
                         self.send(message, receiver.socket)
                     else:
-                        self.send(Message('Server', '', '', f'{message.receiver} is not available at the moment.'), s)
+                        self.send(Message('Private', 'Server', message.sender, f'{message.receiver} is not available at the moment.'), s)
                 
                 elif message.type == "Public":
                     self.send_to_all(message)

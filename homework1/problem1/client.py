@@ -38,13 +38,13 @@ class Client:
             if option == 1:
                 username = input("Enter your username: ").strip()
                 self.user = User(username, s)
-                self.send(Message("Server", username, "", "SetUsername"))
+                self.send(Message('Login', username, 'Server', ''))
                 if self.receive(s) == 'This username has already taken!':
                     continue
                 break
             
             elif option == 2:
-                s.sendall(Message("Server", "", "", "list").marshal())
+                s.sendall(Message('list', '', 'Server', '').marshal())
 
             elif option == 3:
                 s.close()
@@ -63,17 +63,17 @@ class Client:
             if option == 1:
                 receiver = input("Enter receiver username: ").strip()
                 message = input("Enter your message:\n")
-                self.send(Message("Private", self.user.username, receiver, message))
+                self.send(Message('Private', self.user.username, receiver, message))
 
             elif option == 2:
                 message = input("Enter your message:\n")
-                self.send(Message("Public", self.user.username, "", message))
+                self.send(Message('Public', self.user.username, '', message))
 
             elif option == 3:
-                self.send(Message("Server", "", "", "list"))
+                self.send(Message('list', '', 'Server', ''))
 
             elif option == 4:
-                self.send(Message("Server", self.user.username, "", "quit"))
+                self.send(Message('quit', self.user.username, 'Server', ''))
                 self.user.socket.close()
                 print("Quit")
                 return
@@ -82,12 +82,7 @@ class Client:
         """Receive and print new messages"""
         data = s.recv(4096)
         message = Message.unmarshal(data)
-        if message.type == "Server":
-            print()
-            print(f'{message.type} message: {message.content}')
-        else:
-            print()
-            print(f'{message.type} message from {message.sender}: {message.content}')
+        print(f'\n{message.type} message from {message.sender}: {message.content}')
         return message.content
 
     def message_receiver(self, s: socket.socket):
