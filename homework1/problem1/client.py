@@ -1,6 +1,5 @@
 import socket
 import threading
-import datetime
 
 from utils import Message, User, UserStatus
 
@@ -39,13 +38,13 @@ class Client:
             if option == 1:
                 username = input("Enter your username: ").strip()
                 self.user = User(username, s)
-                self.send(Message("Server", username, "", "SetUsername", datetime.datetime.now().strftime('%H:%M')))
+                self.send(Message("Server", username, "", "SetUsername"))
                 if self.receive(s) == 'This username has already taken!':
                     continue
                 break
             
             elif option == 2:
-                s.sendall(Message("Server", "", "", "list", datetime.datetime.now().strftime('%H:%M')).marshal())
+                s.sendall(Message("Server", "", "", "list").marshal())
 
             elif option == 3:
                 s.close()
@@ -64,17 +63,17 @@ class Client:
             if option == 1:
                 receiver = input("Enter receiver username: ").strip()
                 message = input("Enter your message:\n")
-                self.send(Message("Private", self.user.username, receiver, message, datetime.datetime.now().strftime('%H:%M')))
+                self.send(Message("Private", self.user.username, receiver, message))
 
             elif option == 2:
                 message = input("Enter your message:\n")
-                self.send(Message("Public", self.user.username, "", message, datetime.datetime.now().strftime('%H:%M')))
+                self.send(Message("Public", self.user.username, "", message))
 
             elif option == 3:
-                self.send(Message("Server", "", "", "list", datetime.datetime.now().strftime('%H:%M')))
+                self.send(Message("Server", "", "", "list"))
 
             elif option == 4:
-                self.send(Message("Server", self.user.username, "", "quit", datetime.datetime.now().strftime('%H:%M')))
+                self.send(Message("Server", self.user.username, "", "quit"))
                 self.user.socket.close()
                 print("Quit")
                 return

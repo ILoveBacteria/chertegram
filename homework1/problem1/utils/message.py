@@ -1,5 +1,8 @@
+from datetime import datetime
+
+
 class Message:
-    def __init__(self, type: str, sender: str, receiver: str, content: str, send_time: str) -> None:
+    def __init__(self, type: str, sender: str, receiver: str, content: str, send_time=datetime.now().strftime('%H:%M')) -> None:
         self.type = type
         self.sender = sender
         self.receiver = receiver

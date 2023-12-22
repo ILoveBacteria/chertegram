@@ -1,6 +1,5 @@
 import socket
 import threading
-import datetime
 
 from utils import Message, User, UserStatus
 
@@ -54,21 +53,21 @@ class Server:
                 
                 if message.type == "Server":
                     if message.content == "list":
-                        self.send(Message("Server", "", "", self.get_users_list_str(), datetime.datetime.now().strftime('%H:%M')), s)
+                        self.send(Message("Server", "", "", self.get_users_list_str()), s)
                     
                     elif message.content == "SetUsername":
                         if self.get_user_by_username(message.sender):
-                            self.send(Message('Server', '', '', f'This username has already taken!', datetime.datetime.now().strftime('%H:%M')), s)
+                            self.send(Message('Server', '', '', f'This username has already taken!'), s)
                             continue
                         user = User(message.sender, s)
                         self.users.append(user)
-                        self.send_to_all(Message("Server", "", "", f'{message.sender} joined the chat. Say hello to {message.sender}!', datetime.datetime.now().strftime('%H:%M')))
+                        self.send_to_all(Message("Server", "", "", f'{message.sender} joined the chat. Say hello to {message.sender}!'))
                         print(f'{message.sender} joined the chat.')
                     
                     elif message.content == "quit":
                         self.get_user_by_username(message.sender).socket.close()
                         self.remove_user_by_username(message.sender)
-                        self.send_to_all(Message("Server", "", "", f'{message.sender} left the chat.', datetime.datetime.now().strftime('%H:%M')))
+                        self.send_to_all(Message("Server", "", "", f'{message.sender} left the chat.'))
                         print(f'{message.sender} left the chat.')
                         return
                 
@@ -77,7 +76,7 @@ class Server:
                     if receiver.status == UserStatus.AVAILABLE:
                         self.send(message, receiver.socket)
                     else:
-                        self.send(Message('Server', '', '', f'{message.receiver} is not available at the moment.', datetime.datetime.now().strftime('%H:%M')), s)
+                        self.send(Message('Server', '', '', f'{message.receiver} is not available at the moment.'), s)
                 
                 elif message.type == "Public":
                     self.send_to_all(message)
