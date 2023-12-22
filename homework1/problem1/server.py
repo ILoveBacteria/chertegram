@@ -1,5 +1,6 @@
 import socket
 import threading
+import os
 
 from utils import Message, User, UserStatus
 
@@ -54,6 +55,8 @@ class Server:
     
     def load_user_data_from_file(self):
         """Load user data from file"""
+        if not os.path.exists('user.csv'):
+            return
         with open('user.csv', 'r') as f:
             for line in f.readlines():
                 username, password = line.strip().split(',')
