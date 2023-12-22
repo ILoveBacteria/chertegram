@@ -2,7 +2,7 @@ from datetime import datetime
 
 
 class Message:
-    def __init__(self, type: str, sender: str, receiver: str, content: str, time_sent: datetime = datetime.now().strftime('%H:%M:%S')) -> None:
+    def __init__(self, type: str, sender: str, receiver: str, content: str, time_sent: datetime) -> None:
         self.type = type
         self.sender = sender
         self.receiver = receiver

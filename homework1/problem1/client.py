@@ -1,16 +1,17 @@
 import socket
 import threading
 
+from datetime import datetime
 from utils import Message, User, UserStatus
-import datetime
 
 
 class Client:
     """Client class for communicating with server"""
 
-    def __init__(self, host: str = "", port: int = 0) -> None:
+    def __init__(self, host: str = "", TCP_port: int = 0, UDP_port: int = 0) -> None:
         self.host = host
-        self.port = port
+        self.TCP_port = TCP_port
+        self.UDP_port = UDP_port
         self.user = User
 
     def send(self, message: Message):
@@ -20,14 +21,43 @@ class Client:
         else:
             print("You are at busy status. You cannot send messages")
 
-    def start(self, server_address: tuple[str, int]):
+    def receive(self, s: socket.socket) -> str:
+        """Receive and print new messages"""
+        data = s.recv(4096)
+        message = Message.unmarshal(data)
+        time = datetime.strptime(message.time_sent, '%Y-%m-%d %H:%M:%S.%f').strftime('%H:%M:%S')
+        print(f'\n{time} {message.type} message from {message.sender}: {message.content}')
+        return message.content
+
+    def message_receiver(self, s: socket.socket):
+        """Receive messages from server in a separate thread"""
+        while True:
+            try:
+                self.receive(s)
+            except:
+                return
+    
+    def get_users_list(self, s: socket.socket, address: tuple[str, int]):
+        s.sendto(Message('list', '', 'Server', '', datetime.now()).marshal(), address)
+        data, _ = s.recvfrom(255)
+        message = Message.unmarshal(data)
+        time = datetime.strptime(message.time_sent, '%Y-%m-%d %H:%M:%S.%f').strftime('%H:%M:%S')
+        print(f'\n{time} {message.type} message from {message.sender}: {message.content}')
+
+
+    def start(self, server_TCP_address: tuple[str, int], server_UDP_address: tuple[str, int]):
         """Starts the client"""
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((self.host, self.port))
-        self.host = s.getsockname()[0]
-        self.port = s.getsockname()[1]
-        print(f'Client started at {self.host}:{self.port}')
-        s.connect(server_address)
+        UDP_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        UDP_socket.bind((self.host, self.UDP_port))
+        self.host = UDP_socket.getsockname()[0]
+        self.TCP_port = UDP_socket.getsockname()[1]
+
+        TCP_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        TCP_socket.bind((self.host, self.TCP_port))
+        self.host = TCP_socket.getsockname()[0]
+        self.TCP_port = TCP_socket.getsockname()[1]
+        TCP_socket.connect(server_TCP_address)
+        print(f'Client started at {self.host}:{self.TCP_port}')
 
         while True:
             print()
@@ -39,26 +69,24 @@ class Client:
             if option == 1:
                 username = input("Enter your username: ").strip()
                 password = input("Enter your password: ").strip()
-                s.sendall(Message('Login', username, 'Server', password).marshal())
-                response = self.receive(s)
+                TCP_socket.sendall(Message('Login', username, 'Server', password, datetime.now()).marshal())
+                response = self.receive(TCP_socket)
                 if response == 'Wrong password!':
                     continue
                 elif response in ('Logged in successfully!', 'Signed up successfully!'):
-                    self.user = User(username, s)
+                    self.user = User(username, TCP_socket)
                     break
             
             elif option == 2:
-                UDP_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                UDP_socket.sendto(b'list', ('127.0.0.1', 5001))
-                message, _ = UDP_socket.recvfrom(255)
-                print(message.decode())
+                self.get_users_list(UDP_socket, server_UDP_address)
 
             elif option == 3:
-                s.close()
+                TCP_socket.close()
                 print("Quit")
                 return
             
-        threading.Thread(target=self.message_receiver, args=(s,)).start()
+        threading.Thread(target=self.message_receiver, args=(TCP_socket,)).start()
+
         while True:
             print(f"\n{self.user.username} : {self.user.status.value}\n"
                   "1. Change status\n"
@@ -68,52 +96,33 @@ class Client:
                   "5. Quit\n")
             option = int(input("Choose option: ").strip())
 
-
             if option == 1:
                 if self.user.status == UserStatus.AVAILABLE:
-                    self.send(Message('SetStatus', self.user.username, 'Server', UserStatus.BUSY.value))
+                    self.send(Message('SetStatus', self.user.username, 'Server', UserStatus.BUSY.value, datetime.now()))
                     self.user.status = UserStatus.BUSY
                 elif self.user.status == UserStatus.BUSY:
                     self.user.status = UserStatus.AVAILABLE
-                    self.send(Message('SetStatus', self.user.username, 'Server', UserStatus.AVAILABLE.value))
+                    self.send(Message('SetStatus', self.user.username, 'Server', UserStatus.AVAILABLE.value, datetime.now()))
 
             elif option == 2:
                 receiver = input("Enter receiver username: ").strip()
                 message = input("Enter your message:\n")
-                self.send(Message('Private', self.user.username, receiver, message))
+                self.send(Message('Private', self.user.username, receiver, message, datetime.now()))
 
             elif option == 3:
                 message = input("Enter your message:\n")
-                self.send(Message('Public', self.user.username, '', message))
+                self.send(Message('Public', self.user.username, '', message, datetime.now()))
 
             elif option == 4:
-                UDP_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                UDP_socket.sendto(b'list', ('127.0.0.1', 5001))
-                message, _ = UDP_socket.recvfrom(255)
-                print(message.decode())
+                self.get_users_list(UDP_socket, server_UDP_address)
 
             elif option == 5:
-                self.send(Message('quit', self.user.username, 'Server', ''))
+                self.send(Message('quit', self.user.username, 'Server', '', datetime.now()))
                 self.user.socket.close()
                 print("Quit")
-                return
-            
-    def receive(self, s: socket.socket) -> str:
-        """Receive and print new messages"""
-        data = s.recv(4096)
-        message = Message.unmarshal(data)
-        print(f'\n{message.time_sent} {message.type} message from {message.sender}: {message.content}')
-        return message.content
-
-    def message_receiver(self, s: socket.socket):
-        """Receive messages from server in a separate thread"""
-        while True:
-            try:
-                self.receive(s)
-            except:
                 return
 
 
 if __name__ == '__main__':
     client = Client()
-    client.start(("127.0.0.1", 5000))
+    client.start(("127.0.0.1", 25000), ("127.0.0.1", 25001))
