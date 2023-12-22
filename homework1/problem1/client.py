@@ -28,8 +28,6 @@ class Client:
         self.port = s.getsockname()[1]
         print(f'Client started at {self.host}:{self.port}')
         s.connect(server_address)
-        threading.Thread(target=self.message_receiver, args=(s,)).start()
-
 
         while True:
             print()
@@ -42,6 +40,8 @@ class Client:
                 username = input("Enter your username: ").strip()
                 self.user = User(username, s)
                 self.send(Message("Server", username, "", "SetUsername", datetime.datetime.now().strftime('%H:%M')))
+                if self.receive(s) == 'This username has already taken!':
+                    continue
                 break
             
             elif option == 2:
@@ -52,6 +52,7 @@ class Client:
                 print("Quit")
                 return
             
+        threading.Thread(target=self.message_receiver, args=(s,)).start()
         while True:
             print()
             print("1. Send private message\n"
@@ -77,20 +78,24 @@ class Client:
                 self.user.socket.close()
                 print("Quit")
                 return
-
+            
+    def receive(self, s: socket.socket) -> str:
+        """Receive and print new messages"""
+        data = s.recv(4096)
+        message = Message.unmarshal(data)
+        if message.type == "Server":
+            print()
+            print(f'{message.type} message: {message.content}')
+        else:
+            print()
+            print(f'{message.type} message from {message.sender}: {message.content}')
+        return message.content
 
     def message_receiver(self, s: socket.socket):
         """Receive messages from server in a separate thread"""
         while True:
             try:
-                data = s.recv(4096)
-                message = Message.unmarshal(data)
-                if message.type == "Server":
-                    print()
-                    print(f'{message.type} message: {message.content}')
-                else:
-                    print()
-                    print(f'{message.type} message from {message.sender}: {message.content}')
+                self.receive(s)
             except:
                 return
 
