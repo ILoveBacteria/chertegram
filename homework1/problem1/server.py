@@ -2,7 +2,6 @@ import socket
 import threading
 import os
 
-from datetime import datetime
 from utils import Message, User, UserStatus
 
 
@@ -93,34 +92,34 @@ class Server:
                     if user:
                         if user.check_password(message.content, Server.PASSWORD_SALT):
                             user.socket = s
-                            self.send(Message('Private', 'Server', message.sender, 'Logged in successfully!', datetime.now()), s)
+                            self.send(Message('Private', 'Server', message.sender, 'Logged in successfully!'), s)
                             print(f'{message.sender} joined the chat.')
                             message_history = [m.content for m in self.messages if m.sender == message.sender]
-                            message_history.insert(0, f'This is your message history:')
                             if message_history:
-                                self.send(Message('Private', 'Server', message.sender, '\n'.join(message_history), datetime.now()), s)
-                            self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!', datetime.now()))
+                                message_history.insert(0, f'This is your message history:')
+                                self.send(Message('Private', 'Server', message.sender, '\n'.join(message_history)), s)
+                            self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
                         else:
-                            self.send(Message('Private', 'Server', message.sender, 'Wrong password!', datetime.now()), s)
+                            self.send(Message('Private', 'Server', message.sender, 'Wrong password!'), s)
                     else:
                         user = User(message.sender, s)
-                        self.send(Message('Private', 'Server', message.sender, 'Signed up successfully!', datetime.now()), s)
+                        self.send(Message('Private', 'Server', message.sender, 'Signed up successfully!'), s)
                         user.set_password(message.content, Server.PASSWORD_SALT)
                         self.users.append(user)
                         self.save_user_data_to_file()
                         print(f'{message.sender} joined the chat.')
-                        self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!', datetime.now()))
+                        self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!'))
                 
                 elif message.type == "SetStatus":
                     self.set_user_status(message.sender, message.content)
                     print(f'{message.sender} changed status to {message.content}.')
-                    self.send_to_all(Message('Public', 'Server', '', f'{message.sender} is {message.content} now.', datetime.now()))
+                    self.send_to_all(Message('Public', 'Server', '', f'{message.sender} is {message.content} now.'))
 
                 elif message.type == "quit":
                     user = self.get_user_by_username(message.sender)
                     user.socket.close()
                     user.socket = None
-                    self.send_to_all(Message('Public', 'Server', '', f'{message.sender} left the chat.', datetime.now()))
+                    self.send_to_all(Message('Public', 'Server', '', f'{message.sender} left the chat.'))
                     print(f'{message.sender} left the chat.')
                     return
                 
@@ -130,7 +129,7 @@ class Server:
                         if self.send(message, receiver.socket):
                             self.messages.append(message)
                     else:
-                        self.send(Message('Private', 'Server', message.sender, f'{message.receiver} is not available at the moment.', datetime.now()), s)
+                        self.send(Message('Private', 'Server', message.sender, f'{message.receiver} is not available at the moment.'), s)
                 
                 elif message.type == "Public":
                     self.send_to_all(message)
@@ -144,7 +143,7 @@ class Server:
         while True:
             message, client_address = s.recvfrom(255)
             if Message.unmarshal(message).type == 'list':
-                s.sendto(Message('Private', 'Server', '', self.get_users_list_str(), datetime.now()).marshal(), client_address)
+                s.sendto(Message('Private', 'Server', '', self.get_users_list_str()).marshal(), client_address)
 
     def start(self):
         """Start the UDP & TCP servers and listen for incoming connections"""
@@ -162,8 +161,6 @@ class Server:
             client_socket, client_address = TCP_socket.accept()
             print(f'Client {client_address[0]}:{client_address[1]} connected')
             threading.Thread(target=self.client_handler, args=(client_socket,)).start()
-
-
 
 
 if __name__ == '__main__':

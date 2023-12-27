@@ -1,7 +1,6 @@
 import socket
 import threading
 
-from datetime import datetime
 from utils import Message, User, UserStatus
 
 
@@ -25,8 +24,7 @@ class Client:
         """Receive and print new messages"""
         data = s.recv(4096)
         message = Message.unmarshal(data)
-        time = datetime.strptime(message.time_sent, '%Y-%m-%d %H:%M:%S.%f').strftime('%H:%M:%S')
-        print(f'\n{time} {message.type} message from {message.sender}: {message.content}')
+        print(f'\n{message.time_sent} {message.type} message from {message.sender}: {message.content}')
         return message.content
 
     def message_receiver(self, s: socket.socket):
@@ -34,15 +32,15 @@ class Client:
         while True:
             try:
                 self.receive(s)
-            except:
+            except Exception as e:
+                print(e)
                 return
     
     def get_users_list(self, s: socket.socket, address: tuple[str, int]):
-        s.sendto(Message('list', '', 'Server', '', datetime.now()).marshal(), address)
+        s.sendto(Message('list', '', 'Server', '').marshal(), address)
         data, _ = s.recvfrom(255)
         message = Message.unmarshal(data)
-        time = datetime.strptime(message.time_sent, '%Y-%m-%d %H:%M:%S.%f').strftime('%H:%M:%S')
-        print(f'\n{time} {message.type} message from {message.sender}: {message.content}')
+        print(f'\n{message.time_sent} {message.type} message from {message.sender}: {message.content}')
 
 
     def start(self, server_TCP_address: tuple[str, int], server_UDP_address: tuple[str, int]):
@@ -50,7 +48,7 @@ class Client:
         UDP_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         UDP_socket.bind((self.host, self.UDP_port))
         self.host = UDP_socket.getsockname()[0]
-        self.TCP_port = UDP_socket.getsockname()[1]
+        self.UDP_port = UDP_socket.getsockname()[1]
 
         TCP_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         TCP_socket.bind((self.host, self.TCP_port))
@@ -69,7 +67,7 @@ class Client:
             if option == 1:
                 username = input("Enter your username: ").strip()
                 password = input("Enter your password: ").strip()
-                TCP_socket.sendall(Message('Login', username, 'Server', password, datetime.now()).marshal())
+                TCP_socket.sendall(Message('Login', username, 'Server', password).marshal())
                 response = self.receive(TCP_socket)
                 if response == 'Wrong password!':
                     continue
@@ -98,26 +96,26 @@ class Client:
 
             if option == 1:
                 if self.user.status == UserStatus.AVAILABLE:
-                    self.send(Message('SetStatus', self.user.username, 'Server', UserStatus.BUSY.value, datetime.now()))
+                    self.send(Message('SetStatus', self.user.username, 'Server', UserStatus.BUSY.value))
                     self.user.status = UserStatus.BUSY
                 elif self.user.status == UserStatus.BUSY:
                     self.user.status = UserStatus.AVAILABLE
-                    self.send(Message('SetStatus', self.user.username, 'Server', UserStatus.AVAILABLE.value, datetime.now()))
+                    self.send(Message('SetStatus', self.user.username, 'Server', UserStatus.AVAILABLE.value))
 
             elif option == 2:
                 receiver = input("Enter receiver username: ").strip()
                 message = input("Enter your message:\n")
-                self.send(Message('Private', self.user.username, receiver, message, datetime.now()))
+                self.send(Message('Private', self.user.username, receiver, message))
 
             elif option == 3:
                 message = input("Enter your message:\n")
-                self.send(Message('Public', self.user.username, '', message, datetime.now()))
+                self.send(Message('Public', self.user.username, '', message))
 
             elif option == 4:
                 self.get_users_list(UDP_socket, server_UDP_address)
 
             elif option == 5:
-                self.send(Message('quit', self.user.username, 'Server', '', datetime.now()))
+                self.send(Message('quit', self.user.username, 'Server', ''))
                 self.user.socket.close()
                 print("Quit")
                 return
