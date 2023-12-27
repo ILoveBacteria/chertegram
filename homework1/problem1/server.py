@@ -1,5 +1,6 @@
 import socket
 import threading
+import os
 
 from datetime import datetime
 from utils import Message, User, UserStatus
@@ -49,8 +50,26 @@ class Server:
         for user in self.users:
             if user.username == username:
                 self.users.remove(user)
+                self.save_user_data_to_file()
                 return
         raise ValueError(f'User {username} not found')
+    
+    def load_user_data_from_file(self):
+        """Load user data from file"""
+        if not os.path.exists('user.csv'):
+            return
+        with open('user.csv', 'r') as f:
+            for line in f.readlines():
+                username, password = line.strip().split(',')
+                user = User(username=username, socket=None)
+                user.password = password
+                self.users.append(user)
+
+    def save_user_data_to_file(self):
+        """Save user data to file"""
+        with open('user.csv', 'w') as f:
+            for user in self.users:
+                f.write(f'{user.username},{user.password}\n')
 
     def set_user_status(self, username: str, userstatus: str) -> str:
         """Update status of user"""
@@ -88,6 +107,7 @@ class Server:
                         self.send(Message('Private', 'Server', message.sender, 'Signed up successfully!', datetime.now()), s)
                         user.set_password(message.content, Server.PASSWORD_SALT)
                         self.users.append(user)
+                        self.save_user_data_to_file()
                         print(f'{message.sender} joined the chat.')
                         self.send_to_all(Message('Public', 'Server', '', f'{message.sender} joined the chat. Say hello to {message.sender}!', datetime.now()))
                 
@@ -128,6 +148,7 @@ class Server:
 
     def start(self):
         """Start the UDP & TCP servers and listen for incoming connections"""
+        self.load_user_data_from_file()
         UDP_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         UDP_socket.bind((self.host, self.UDP_port))
         threading.Thread(target=self.udp_handler, args=(UDP_socket,)).start()
