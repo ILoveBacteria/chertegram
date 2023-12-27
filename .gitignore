@@ -1,3 +1,5 @@
 *.pdf
+*.csv
+problem1/*.csv
 .vscode/
 homework1/problem1/utils/__pycache__/
