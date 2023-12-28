@@ -32,8 +32,7 @@ class Client:
         while True:
             try:
                 self.receive(s)
-            except Exception as e:
-                print(e)
+            except:
                 return
     
     def get_users_list(self, s: socket.socket, address: tuple[str, int]):

@@ -18,5 +18,4 @@ class Message:
     @classmethod
     def unmarshal(cls, data: bytes):
         """Unmarshal bytes into message"""
-        print(data.decode().split(';'))
         return Message(*data.decode().split(';'))

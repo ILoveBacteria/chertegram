@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+import time
 
 from utils import Message, User, UserStatus
 
@@ -19,6 +20,7 @@ class Server:
     def send(self, message: Message, s: socket.socket) -> bool:
         """Send message to a specific user"""
         s.sendall(message.marshal())
+        time.sleep(0.2)
         return True
 
     def send_to_all(self, message: Message):
