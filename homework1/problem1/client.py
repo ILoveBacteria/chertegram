@@ -71,7 +71,7 @@ class Client:
                 if response == 'Wrong password!':
                     continue
                 elif response in ('Logged in successfully!', 'Signed up successfully!'):
-                    self.user = User(username, TCP_socket)
+                    self.user = User(username, TCP_socket, UserStatus.AVAILABLE)
                     break
             
             elif option == 2:

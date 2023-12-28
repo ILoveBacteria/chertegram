@@ -62,7 +62,7 @@ class Server:
         with open('user.csv', 'r') as f:
             for line in f.readlines():
                 username, password = line.strip().split(',')
-                user = User(username=username, socket=None)
+                user = User(username=username, socket=None, status=UserStatus.OFFLINE)
                 user.password = password
                 self.users.append(user)
 
@@ -94,6 +94,7 @@ class Server:
                     if user:
                         if user.check_password(message.content, Server.PASSWORD_SALT):
                             user.socket = s
+                            user.status = UserStatus.AVAILABLE
                             self.send(Message('Private', 'Server', message.sender, 'Logged in successfully!'), s)
                             print(f'{message.sender} joined the chat.')
                             message_history = [m.content for m in self.messages if m.sender == message.sender]
@@ -104,7 +105,7 @@ class Server:
                         else:
                             self.send(Message('Private', 'Server', message.sender, 'Wrong password!'), s)
                     else:
-                        user = User(message.sender, s)
+                        user = User(message.sender, s, UserStatus.AVAILABLE)
                         self.send(Message('Private', 'Server', message.sender, 'Signed up successfully!'), s)
                         user.set_password(message.content, Server.PASSWORD_SALT)
                         self.users.append(user)
@@ -121,6 +122,7 @@ class Server:
                     user = self.get_user_by_username(message.sender)
                     user.socket.close()
                     user.socket = None
+                    user.status = UserStatus.OFFLINE
                     self.send_to_all(Message('Public', 'Server', '', f'{message.sender} left the chat.'))
                     print(f'{message.sender} left the chat.')
                     return

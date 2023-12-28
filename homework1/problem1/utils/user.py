@@ -6,10 +6,11 @@ import hashlib
 class UserStatus(StrEnum):
     AVAILABLE = 'available'
     BUSY = 'busy'
+    OFFLINE = 'offline'
 
 
 class User:
-    def __init__(self, username: str, socket: socket.socket, status: UserStatus = UserStatus.AVAILABLE) -> None:
+    def __init__(self, username: str, socket: socket.socket, status: UserStatus) -> None:
         self.username = username
         self.password = None
         self.socket = socket
