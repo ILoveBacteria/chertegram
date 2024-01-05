@@ -10,10 +10,10 @@ class UserStatus(StrEnum):
 
 
 class User:
-    def __init__(self, username: str, socket: socket.socket, status: UserStatus) -> None:
+    def __init__(self, socket: socket.socket, username: str, status: UserStatus) -> None:
+        self.socket = socket
         self.username = username
         self.password = None
-        self.socket = socket
         self.status = status
 
     def set_password(self, password: str, salt: str):
