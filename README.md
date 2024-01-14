@@ -1,11 +1,11 @@
-# Computer Networks Exercise
+# Chertegram (computer networks course exercise)
 
 [![Last commit](https://img.shields.io/github/last-commit/ILoveBacteria/connect-4)](https://github.com/ILoveBacteria/connect-4/commits/master)
 ![GitHub contributors](https://img.shields.io/github/contributors/ILoveBacteria/computer-networks-exercises)
 
 ## Description
 
-We implement a simple chat app with low-level socket programming in this mini project, including TCP and UDP protocols.
+We implement a simple and _chert_ chat app with low-level socket programming in this mini project, including TCP and UDP protocols.
 
 
 Chat app features:
