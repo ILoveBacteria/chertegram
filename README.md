@@ -1,7 +1,7 @@
 # Chertegram (computer networks course exercise)
 
-[![Last commit](https://img.shields.io/github/last-commit/ILoveBacteria/connect-4)](https://github.com/ILoveBacteria/connect-4/commits/master)
-![GitHub contributors](https://img.shields.io/github/contributors/ILoveBacteria/computer-networks-exercises)
+[![Last commit](https://img.shields.io/github/last-commit/ILoveBacteria/chertegram)](https://github.com/ILoveBacteria/chertegram/commits/master)
+![GitHub contributors](https://img.shields.io/github/contributors/ILoveBacteria/chertegram)
 
 ## Description
 
